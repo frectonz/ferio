@@ -1,5 +1,7 @@
 mod schema;
 
+use std::str::FromStr;
+
 use chrono::{Datelike, Local};
 use schema::{holidays_schema::HolidayRoot, sections_schema::SectionsRoot};
 use scraper::{Html, Selector};
@@ -14,7 +16,8 @@ pub struct Holiday {
 impl Holiday {
     pub fn get_greeting(&self) -> String {
         let contains_day = self.name.to_lowercase().contains("day");
-        if contains_day {
+        let contains_month = self.name.to_lowercase().contains("month");
+        if contains_day || contains_month {
             format!("Happy {}", self.name)
         } else {
             format!("Happy {} Day", self.name)
@@ -24,9 +27,9 @@ impl Holiday {
 
 #[derive(Error, Debug)]
 pub enum HolidayErrors {
-    #[error("connection error: {0}")]
+    #[error("Failed to connect to wikipedia")]
     Reqwest(#[from] reqwest::Error),
-    #[error("wikipedia page for {0} doesn't have holidays.")]
+    #[error("Wikipedia page for {0} doesn't have a holidays section")]
     NoHolidaysFound(String),
 }
 
@@ -52,6 +55,31 @@ impl HolidayDate {
     }
 }
 
+#[derive(Error, Debug)]
+pub enum HolidayDateError {
+    #[error("Invalid date format: {0}")]
+    InvalidDate(String),
+    #[error("Invalid month: {0}")]
+    MonthParseError(String),
+    #[error("Invalid day: {0}")]
+    DayParseError(#[from] std::num::ParseIntError),
+}
+
+impl FromStr for HolidayDate {
+    type Err = HolidayDateError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('_').collect();
+        if parts.len() != 2 {
+            return Err(Self::Err::InvalidDate(s.to_string()));
+        }
+        let month = parse_month(parts[0])?;
+        let day = parts[1].parse::<u32>()?;
+
+        Ok(HolidayDate::ManualDate { month, day })
+    }
+}
+
 fn get_month(m: u32) -> &'static str {
     match m {
         1 => "January",
@@ -67,6 +95,24 @@ fn get_month(m: u32) -> &'static str {
         11 => "November",
         12 => "December",
         _ => panic!("Invalid month"),
+    }
+}
+
+fn parse_month(s: &str) -> Result<u32, HolidayDateError> {
+    match s {
+        "January" => Ok(1),
+        "February" => Ok(2),
+        "March" => Ok(3),
+        "April" => Ok(4),
+        "May" => Ok(5),
+        "June" => Ok(6),
+        "July" => Ok(7),
+        "August" => Ok(8),
+        "September" => Ok(9),
+        "October" => Ok(10),
+        "November" => Ok(11),
+        "December" => Ok(12),
+        _ => Err(HolidayDateError::MonthParseError(s.to_string())),
     }
 }
 
