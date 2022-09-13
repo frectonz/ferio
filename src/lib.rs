@@ -132,10 +132,7 @@ pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayErr
         .find(|section| section.line == "Holidays and observances")
         .ok_or(HolidayErrors::NoHolidaysFound(date.get_date()))?;
 
-    let resp = reqwest::get(
-        format!("https://en.wikipedia.org/w/api.php/?action=parse&format=json&prop=text&disableeditsection=1&page={}&section={}", 
-            date.get_date(), section.index)).await?
-    .json::<HolidayRoot>().await?;
+    let resp = reqwest::get(format!("https://en.wikipedia.org/w/api.php/?action=parse&format=json&prop=text&disableeditsection=1&page={}&section={}", date.get_date(), section.index)).await?.json::<HolidayRoot>().await?;
 
     let document = Html::parse_document(&resp.parse.text.field);
     let selector = Selector::parse("li a:nth-child(1)").unwrap();
