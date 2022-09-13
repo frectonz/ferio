@@ -1,13 +1,13 @@
 pub mod sections_schema {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct SectionsRoot {
         pub parse: Parse,
     }
 
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Parse {
         pub title: String,
@@ -16,7 +16,7 @@ pub mod sections_schema {
         pub showtoc: String,
     }
 
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Section {
         pub toclevel: i64,
@@ -33,13 +33,13 @@ pub mod sections_schema {
 pub mod holidays_schema {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Default, Debug, Clone, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct HolidayRoot {
         pub parse: Parse,
     }
 
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Default, Debug, Clone, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Parse {
         pub title: String,
@@ -47,7 +47,7 @@ pub mod holidays_schema {
         pub text: Text,
     }
 
-    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Default, Debug, Clone, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Text {
         #[serde(rename = "*")]

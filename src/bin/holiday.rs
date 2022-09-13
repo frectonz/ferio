@@ -1,4 +1,4 @@
-use ansi_term::Colour::{Green, Purple, Yellow};
+use ansi_term::Colour::{Blue, Green, Purple, Yellow};
 use clap::Parser;
 use color_eyre::eyre::Result;
 use ferio::{get_holidays, HolidayDate};
@@ -15,9 +15,7 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
-
     let args = Args::parse();
-
     let date = args.date.map_or(Ok(HolidayDate::Today), |d| (&d).parse())?;
 
     let holidays = get_holidays(&date).await?;
@@ -28,7 +26,10 @@ async fn main() -> Result<()> {
         Purple.bold().paint(date.get_date())
     );
 
-    eprintln!("\n-----------------------------------------------------");
+    eprintln!(
+        "{}",
+        Blue.paint("-----------------------------------------------------")
+    );
     for (index, holiday) in holidays.iter().enumerate() {
         println!(
             "{}. {} <{}>",
@@ -37,7 +38,10 @@ async fn main() -> Result<()> {
             holiday.wikipedia_url
         );
     }
-    eprintln!("-----------------------------------------------------\n");
+    eprintln!(
+        "{}",
+        Blue.paint("-----------------------------------------------------")
+    );
 
     Ok(())
 }

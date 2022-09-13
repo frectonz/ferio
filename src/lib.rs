@@ -1,10 +1,9 @@
 mod schema;
 
-use std::str::FromStr;
-
 use chrono::{Datelike, Local};
 use schema::{holidays_schema::HolidayRoot, sections_schema::SectionsRoot};
 use scraper::{Html, Selector};
+use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Debug)]
@@ -130,7 +129,7 @@ pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayErr
         .sections
         .iter()
         .find(|section| section.line == "Holidays and observances")
-        .ok_or(HolidayErrors::NoHolidaysFound(date.get_date()))?;
+        .ok_or_else(|| HolidayErrors::NoHolidaysFound(date.get_date()))?;
 
     let resp = reqwest::get(format!("https://en.wikipedia.org/w/api.php/?action=parse&format=json&prop=text&disableeditsection=1&page={}&section={}", date.get_date(), section.index)).await?.json::<HolidayRoot>().await?;
 
