@@ -46,7 +46,7 @@ async fn answer(
                 bold(&date.get_date())
             );
             let holidays = holidays.iter().fold(String::new(), |mut acc, h| {
-                acc.push_str("\n");
+                acc.push('\n');
                 acc.push_str(&link(&h.wikipedia_url, &h.get_greeting()));
                 acc
             });
@@ -56,8 +56,14 @@ async fn answer(
                 .send()
                 .await?
         }
-        Command::Start => bot.send_message(message.chat.id, format!("Start")).await?,
-        Command::Stop => bot.send_message(message.chat.id, format!("Stop")).await?,
+        Command::Start => {
+            bot.send_message(message.chat.id, "Start".to_string())
+                .await?
+        }
+        Command::Stop => {
+            bot.send_message(message.chat.id, "Stop".to_string())
+                .await?
+        }
     };
 
     Ok(())
