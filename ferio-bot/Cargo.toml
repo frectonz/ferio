@@ -1,0 +1,11 @@
+[package]
+name = "ferio-bot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ferio = { path = "../ferio" }
+tokio = { version = "1", features = ["full"] }
+teloxide = { version = "0.10", features = ["macros", "auto-send"] }
+diesel = { version = "2.0.0", features = ["postgres"] }
+dotenvy = "0.15"

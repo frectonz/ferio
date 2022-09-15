@@ -1,19 +1,2 @@
-[package]
-name = "ferio"
-version = "0.1.0"
-edition = "2021"
-authors = ["Fraol Lemecha"]
-description = "Everyday is a holiday!"
-license = "MIT"
-homepage = "https://github.com/frectonz/ferio"
-
-[dependencies]
-reqwest = { version = "0.11", features = ["json"] }
-tokio = { version = "1", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
-color-eyre = { version = "0.6", default-features = false }
-scraper = "0.13"
-chrono = "0.4"
-thiserror = "1.0"
-ansi_term = "0.12"
-clap = { version = "3.2.21", features = ["derive"] }
+[workspace]
+members = ["ferio", "ferio-bot", "ferio-cli"]
