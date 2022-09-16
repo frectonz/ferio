@@ -1,2 +1,2 @@
 [workspace]
-members = ["ferio", "ferio-bot", "ferio-cli"]
+members = ["ferio", "ferio-api", "ferio-cli"]
