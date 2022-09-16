@@ -3,10 +3,11 @@ mod schema;
 use chrono::{Datelike, Local};
 use schema::{holidays_schema::HolidayRoot, sections_schema::SectionsRoot};
 use scraper::{Html, Selector};
+use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Holiday {
     pub name: String,
     pub wikipedia_url: String,
@@ -25,7 +26,7 @@ impl Holiday {
 }
 
 #[derive(Error, Debug)]
-pub enum HolidayErrors {
+pub enum HolidayError {
     #[error("Failed to connect to wikipedia")]
     Reqwest(#[from] reqwest::Error),
     #[error("Wikipedia page for {0} doesn't have a holidays section")]
@@ -115,7 +116,7 @@ fn parse_month(s: &str) -> Result<u32, HolidayDateError> {
     }
 }
 
-pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayErrors> {
+pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayError> {
     let resp = reqwest::get(format!(
         "https://en.wikipedia.org/w/api.php/?action=parse&format=json&prop=sections&page={}",
         date.get_date()
@@ -129,7 +130,7 @@ pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayErr
         .sections
         .iter()
         .find(|section| section.line == "Holidays and observances")
-        .ok_or_else(|| HolidayErrors::NoHolidaysFound(date.get_date()))?;
+        .ok_or_else(|| HolidayError::NoHolidaysFound(date.get_date()))?;
 
     let resp = reqwest::get(format!("https://en.wikipedia.org/w/api.php/?action=parse&format=json&prop=text&disableeditsection=1&page={}&section={}", date.get_date(), section.index)).await?.json::<HolidayRoot>().await?;
 

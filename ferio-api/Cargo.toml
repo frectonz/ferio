@@ -7,4 +7,3 @@ edition = "2021"
 axum = "0.5"
 ferio = { path = "../ferio" }
 tokio = { version = "1", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
