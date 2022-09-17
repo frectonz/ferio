@@ -11,7 +11,7 @@ fn get_port() -> u16 {
 #[tokio::main]
 async fn main() {
     let app = Router::new().route("/", get(holidays));
-    let addr = SocketAddr::from(([127, 0, 0, 1], get_port()));
+    let addr = SocketAddr::from(([0, 0, 0, 0], get_port()));
     println!("Listening on http://{}", addr.to_string());
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
