@@ -10,7 +10,7 @@ fn get_port() -> u16 {
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new().route("/", get(holidays));
+    let app = Router::new().route("/", get(holidays_service));
     let addr = SocketAddr::from(([0, 0, 0, 0], get_port()));
     println!("Listening on http://{}", addr.to_string());
     axum::Server::bind(&addr)
@@ -19,7 +19,7 @@ async fn main() {
         .unwrap();
 }
 
-async fn holidays(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
+async fn holidays_service(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     let date = params
         .get("date")
         .map_or(Ok(HolidayDate::Today), |d| (&d).parse());

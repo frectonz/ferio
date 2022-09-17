@@ -1,7 +1,9 @@
 mod schema;
 
 use chrono::{Datelike, Local};
-use schema::{holidays_schema::HolidayRoot, sections_schema::SectionsRoot};
+use schema::{
+    holidays_schema::HolidayRoot, image_schema::ImageRoot, sections_schema::SectionsRoot,
+};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -11,6 +13,7 @@ use thiserror::Error;
 pub struct Holiday {
     pub name: String,
     pub wikipedia_url: String,
+    pub image_url: Option<String>,
 }
 
 impl Holiday {
@@ -117,6 +120,60 @@ fn parse_month(s: &str) -> Result<u32, HolidayDateError> {
 }
 
 pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayError> {
+    let holiday_section_index = get_holidays_section_index(date).await?;
+
+    let resp = reqwest::get(
+        format!(
+            "https://en.wikipedia.org/w/api.php/?action=parse&format=json&prop=text&disableeditsection=1&page={}&section={}",
+            date.get_date(),
+            holiday_section_index
+        )
+    ).await?.json::<HolidayRoot>().await?;
+
+    let mut holidays = tokio::spawn(async move {
+        let document = Html::parse_document(&resp.parse.text.field);
+        let selector = Selector::parse("li a:nth-child(1)").unwrap();
+
+        document
+            .select(&selector)
+            .filter(|e| e.inner_html() != "feast day")
+            .filter(|e| {
+                e.value()
+                    .attr("href")
+                    .map(|h| h.starts_with("/wiki/") && h != "/wiki/Feast_day")
+                    .unwrap_or(false)
+            })
+            .map(|e| {
+                let name = e.text().fold(String::new(), |mut acc, el| {
+                    acc.push_str(el);
+                    acc
+                });
+
+                let wikipedia_url = e
+                    .value()
+                    .attr("href")
+                    .map(|url| format!("https://en.wikipedia.org{}", url))
+                    .unwrap_or_default();
+
+                Holiday {
+                    name,
+                    image_url: None,
+                    wikipedia_url,
+                }
+            })
+            .collect::<Vec<_>>()
+    })
+    .await
+    .expect("Failed to `join` async task");
+
+    for mut h in &mut holidays {
+        h.image_url = get_image(&h.name).await;
+    }
+
+    Ok(holidays)
+}
+
+async fn get_holidays_section_index(date: &HolidayDate) -> Result<String, HolidayError> {
     let resp = reqwest::get(format!(
         "https://en.wikipedia.org/w/api.php/?action=parse&format=json&prop=sections&page={}",
         date.get_date()
@@ -132,38 +189,17 @@ pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayErr
         .find(|section| section.line == "Holidays and observances")
         .ok_or_else(|| HolidayError::NoHolidaysFound(date.get_date()))?;
 
-    let resp = reqwest::get(format!("https://en.wikipedia.org/w/api.php/?action=parse&format=json&prop=text&disableeditsection=1&page={}&section={}", date.get_date(), section.index)).await?.json::<HolidayRoot>().await?;
+    Ok(section.index.clone())
+}
 
-    let document = Html::parse_document(&resp.parse.text.field);
-    let selector = Selector::parse("li a:nth-child(1)").unwrap();
-    let holidays = document
-        .select(&selector)
-        .filter(|e| e.inner_html() != "feast day")
-        .filter(|e| {
-            e.value()
-                .attr("href")
-                .map(|h| h.starts_with("/wiki/") && h != "/wiki/Feast_day")
-                .unwrap_or(false)
-        })
-        .map(|e| {
-            let name = e.text().fold(String::new(), |mut acc, el| {
-                acc.push_str(el);
-                acc
-            });
-            let href = e
-                .value()
-                .attr("href")
-                .map(|url| format!("https://en.wikipedia.org{}", url))
-                .unwrap_or(format!(
-                    "https://en.wikipedia.org/w/index.php?search={name}"
-                ));
-
-            Holiday {
-                name,
-                wikipedia_url: href,
-            }
-        })
-        .collect::<Vec<_>>();
-
-    Ok(holidays)
+async fn get_image(name: &String) -> Option<String> {
+    let url = format!("https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles={name}");
+    let mut resp = reqwest::get(url)
+        .await
+        .ok()?
+        .json::<ImageRoot>()
+        .await
+        .ok()?;
+    let page = resp.query.pages.values_mut().next()?;
+    Some(page.original.source.clone())
 }

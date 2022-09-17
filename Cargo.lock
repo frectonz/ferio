@@ -354,6 +354,7 @@ dependencies = [
  "scraper",
  "serde",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]
