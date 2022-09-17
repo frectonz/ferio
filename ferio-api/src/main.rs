@@ -1,12 +1,17 @@
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use ferio::{get_holidays, HolidayDate};
-use std::{collections::HashMap, net::SocketAddr};
+use std::{collections::HashMap, env, net::SocketAddr};
+
+fn get_port() -> u16 {
+    env::var("PORT")
+        .map(|p| p.parse::<_>().expect("Failed to parse port"))
+        .unwrap_or(3000)
+}
 
 #[tokio::main]
 async fn main() {
     let app = Router::new().route("/", get(holidays));
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], get_port()));
     println!("Listening on http://{}", addr.to_string());
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
