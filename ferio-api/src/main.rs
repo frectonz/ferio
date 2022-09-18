@@ -1,5 +1,5 @@
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
-use ferio::{get_holidays, HolidayDate};
+use ferio::{get_holidays, Holiday, HolidayDate};
 use serde_json::json;
 use std::{collections::HashMap, env, net::SocketAddr};
 
@@ -46,7 +46,7 @@ async fn holidays_service(Query(params): Query<HashMap<String, String>>) -> impl
                 StatusCode::OK,
                 Json(json!({
                     "date": date,
-                    "data": holidays
+                    "data": holidays_to_json(holidays)
                 })),
             )
         }
@@ -59,4 +59,18 @@ async fn holidays_service(Query(params): Query<HashMap<String, String>>) -> impl
             }),
         ),
     }
+}
+
+fn holidays_to_json(holidays: Vec<Holiday>) -> Vec<serde_json::Value> {
+    holidays
+        .into_iter()
+        .map(|h| {
+            json!({
+                "name": h.name,
+                "greeting": h.get_greeting(),
+                "wikipedia_url": h.wikipedia_url,
+                "image_url": h.image_url
+            })
+        })
+        .collect()
 }
