@@ -37,9 +37,9 @@ bot.command(
   (ctx) =>
     ctx.reply(
       "/start - show introduction message\n" +
-      "/today - get today's holidays\n" +
-      "/date - get holidays for a given date\n" +
-      "/help - show this message"
+        "/today - get today's holidays\n" +
+        "/date - get holidays for a given date\n" +
+        "/help - show this message",
     ),
 );
 
