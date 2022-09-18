@@ -8,7 +8,9 @@ serve(async (req) => {
   if (req.method == "POST") {
     console.log("Received update");
     const url = new URL(req.url);
+    console.log("URL", url);
     if (url.pathname.slice(1) == bot.token) {
+      console.log("Handling update");
       try {
         return await handleUpdate(req);
       } catch (err) {
