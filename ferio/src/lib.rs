@@ -167,7 +167,7 @@ pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayErr
     .expect("Failed to `join` async task");
 
     for mut h in &mut holidays {
-        h.image_url = get_image(&h.name).await;
+        h.image_url = get_image(&h.wikipedia_url).await;
     }
 
     Ok(holidays)
@@ -192,7 +192,11 @@ async fn get_holidays_section_index(date: &HolidayDate) -> Result<String, Holida
     Ok(section.index.clone())
 }
 
-async fn get_image(name: &String) -> Option<String> {
+async fn get_image(wikipedia_url: &String) -> Option<String> {
+    let name = wikipedia_url
+        .replace("https://en.wikipedia.org/wiki/", "")
+        .replace("_", " ");
+    println!("Getting image for {}", name);
     let url = format!("https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles={name}");
     let mut resp = reqwest::get(url)
         .await
