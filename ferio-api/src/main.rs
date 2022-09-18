@@ -1,5 +1,6 @@
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use ferio::{get_holidays, HolidayDate};
+use serde_json::json;
 use std::{collections::HashMap, env, net::SocketAddr};
 
 fn get_port() -> u16 {
@@ -25,12 +26,37 @@ async fn holidays_service(Query(params): Query<HashMap<String, String>>) -> impl
         .map_or(Ok(HolidayDate::Today), |d| (&d).parse());
 
     if let Err(_) = date {
-        return (StatusCode::BAD_REQUEST, Json(Vec::new()));
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json! {
+                {
+                    "error": "Invalid date"
+
+                }
+            }),
+        );
     }
     let date = date.unwrap();
 
     match get_holidays(&date).await {
-        Ok(holidays) => (StatusCode::OK, Json(holidays)),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(Vec::new())),
+        Ok(holidays) => {
+            let date = date.get_date();
+
+            (
+                StatusCode::OK,
+                Json(json!({
+                    "date": date,
+                    "data": holidays
+                })),
+            )
+        }
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json! {
+                {
+                    "error": "Failed to get holidays"
+                }
+            }),
+        ),
     }
 }
