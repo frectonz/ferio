@@ -43,7 +43,7 @@ bot.command(
   "start",
   (ctx) =>
     ctx.reply(
-      "This is a bot that helps you get the holidays for a given date (/date) or today (/today). It sends you then names of the holidays with their wikipedia links and images of the holiday.",
+      "This is a bot that helps you get the holidays for a given date (/date) or today (/today). It sends you the names of the holidays with their wikipedia links and an image of the holiday.",
     ),
 );
 
