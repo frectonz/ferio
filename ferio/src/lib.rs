@@ -13,7 +13,6 @@ use thiserror::Error;
 pub struct Holiday {
     pub name: String,
     pub wikipedia_url: String,
-    pub image_url: Option<String>,
 }
 
 impl Holiday {
@@ -130,45 +129,36 @@ pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayErr
         )
     ).await?.json::<HolidayRoot>().await?;
 
-    let mut holidays = tokio::spawn(async move {
-        let document = Html::parse_document(&resp.parse.text.field);
-        let selector = Selector::parse("li a:nth-child(1)").unwrap();
+    let document = Html::parse_document(&resp.parse.text.field);
+    let selector = Selector::parse("li a:nth-child(1)").unwrap();
 
-        document
-            .select(&selector)
-            .filter(|e| e.inner_html() != "feast day")
-            .filter(|e| {
-                e.value()
-                    .attr("href")
-                    .map(|h| h.starts_with("/wiki/") && h != "/wiki/Feast_day")
-                    .unwrap_or(false)
-            })
-            .map(|e| {
-                let name = e.text().fold(String::new(), |mut acc, el| {
-                    acc.push_str(el);
-                    acc
-                });
+    let holidays = document
+        .select(&selector)
+        .filter(|e| e.inner_html() != "feast day")
+        .filter(|e| {
+            e.value()
+                .attr("href")
+                .map(|h| h.starts_with("/wiki/") && h != "/wiki/Feast_day")
+                .unwrap_or(false)
+        })
+        .map(|e| {
+            let name = e.text().fold(String::new(), |mut acc, el| {
+                acc.push_str(el);
+                acc
+            });
 
-                let wikipedia_url = e
-                    .value()
-                    .attr("href")
-                    .map(|url| format!("https://en.wikipedia.org{}", url))
-                    .unwrap_or_default();
+            let wikipedia_url = e
+                .value()
+                .attr("href")
+                .map(|url| format!("https://en.wikipedia.org{}", url))
+                .unwrap_or_default();
 
-                Holiday {
-                    name,
-                    image_url: None,
-                    wikipedia_url,
-                }
-            })
-            .collect::<Vec<_>>()
-    })
-    .await
-    .expect("Failed to `join` async task");
-
-    for mut h in &mut holidays {
-        h.image_url = get_image(&h.wikipedia_url).await;
-    }
+            Holiday {
+                name,
+                wikipedia_url,
+            }
+        })
+        .collect::<Vec<_>>();
 
     Ok(holidays)
 }
@@ -192,7 +182,7 @@ async fn get_holidays_section_index(date: &HolidayDate) -> Result<String, Holida
     Ok(section.index.clone())
 }
 
-async fn get_image(wikipedia_url: &String) -> Option<String> {
+async fn _get_image(wikipedia_url: &String) -> Option<String> {
     let name = wikipedia_url
         .replace("https://en.wikipedia.org/wiki/", "")
         .replace("_", " ");

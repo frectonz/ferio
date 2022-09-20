@@ -69,7 +69,6 @@ fn holidays_to_json(holidays: Vec<Holiday>) -> Vec<serde_json::Value> {
                 "name": h.name,
                 "greeting": h.get_greeting(),
                 "wikipedia_url": h.wikipedia_url,
-                "image_url": h.image_url
             })
         })
         .collect()
