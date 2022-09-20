@@ -43,7 +43,7 @@ bot.command(
   "start",
   (ctx) =>
     ctx.reply(
-      "This is a bot that helps you get the holidays for a given date (/date) or today (/today). It sends you the names of the holidays with their wikipedia links and an image of the holiday.",
+      "This is a bot that helps you get the holidays for a given date (/date) or today (/today). It sends you the names of the holidays with their wikipedia links.",
     ),
 );
 
@@ -52,7 +52,6 @@ interface Data {
   data: {
     name: string;
     wikipedia_url: string;
-    image_url?: string;
     greeting: string;
   }[];
 }
@@ -90,22 +89,8 @@ bot.command(
 
 async function sendHolidays(ctx: Context, json: Data) {
   for (const holiday of json.data) {
-    const message =
-      `<a href="${holiday.wikipedia_url}">${holiday.greeting}</a>`;
-
-    if (holiday.image_url) {
-      try {
-        await ctx.replyWithPhoto(holiday.image_url, {
-          caption: message,
-          parse_mode: "HTML",
-        });
-      } catch (error) {
-        console.log("error sending image: ", holiday.image_url, error);
-        await ctx.reply(message, { parse_mode: "HTML" });
-      }
-    } else {
-      await ctx.reply(message, { parse_mode: "HTML" });
-    }
+    await ctx.reply(`<a href="${holiday.wikipedia_url}">${holiday.greeting}</a>`
+      , { parse_mode: "HTML" });
   }
 }
 
