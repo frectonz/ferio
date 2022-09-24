@@ -186,10 +186,10 @@ async fn get_holidays_section_index(date: &HolidayDate) -> Result<String, Holida
     Ok(section.index.clone())
 }
 
-async fn _get_image(wikipedia_url: &String) -> Option<String> {
+async fn _get_image(wikipedia_url: &str) -> Option<String> {
     let name = wikipedia_url
         .replace("https://en.wikipedia.org/wiki/", "")
-        .replace("_", " ");
+        .replace('_', " ");
     let url = format!("https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles={name}");
     let mut resp = reqwest::get(url)
         .await

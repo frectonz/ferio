@@ -16,7 +16,7 @@ struct Args {
 async fn main() -> Result<()> {
     color_eyre::install()?;
     let args = Args::parse();
-    let date = args.date.map_or(Ok(HolidayDate::Today), |d| (&d).parse())?;
+    let date = args.date.map_or(Ok(HolidayDate::Today), |d| d.parse())?;
 
     let holidays = get_holidays(&date).await?;
     eprintln!(

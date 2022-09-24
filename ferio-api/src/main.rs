@@ -13,7 +13,7 @@ fn get_port() -> u16 {
 async fn main() {
     let app = Router::new().route("/", get(holidays_service));
     let addr = SocketAddr::from(([0, 0, 0, 0], get_port()));
-    println!("Listening on http://{}", addr.to_string());
+    println!("Listening on http://{}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -23,9 +23,9 @@ async fn main() {
 async fn holidays_service(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     let date = params
         .get("date")
-        .map_or(Ok(HolidayDate::Today), |d| (&d).parse());
+        .map_or(Ok(HolidayDate::Today), |d| d.parse());
 
-    if let Err(_) = date {
+    if date.is_err() {
         return (
             StatusCode::BAD_REQUEST,
             Json(json! {
