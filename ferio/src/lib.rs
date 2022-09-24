@@ -138,7 +138,11 @@ pub async fn get_holidays(date: &HolidayDate) -> Result<Vec<Holiday>, HolidayErr
         .filter(|e| {
             e.value()
                 .attr("href")
-                .map(|h| h.starts_with("/wiki/") && h != "/wiki/Feast_day")
+                .map(|h| {
+                    h.starts_with("/wiki/")
+                        && h != "/wiki/Feast_day"
+                        && h != "/wiki/Wikipedia:Link_rot"
+                })
                 .unwrap_or(false)
         })
         .map(|e| {
