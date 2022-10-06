@@ -1,7 +1,10 @@
-use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use axum::{
+    extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router, Server,
+};
 use ferio::{get_holidays, Holiday, HolidayDate};
 use serde_json::json;
 use std::{collections::HashMap, env, net::SocketAddr};
+use tower_http::cors::CorsLayer;
 
 fn get_port() -> u16 {
     env::var("PORT")
@@ -11,10 +14,12 @@ fn get_port() -> u16 {
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new().route("/", get(holidays_service));
+    let app = Router::new()
+        .route("/", get(holidays_service))
+        .layer(CorsLayer::permissive());
     let addr = SocketAddr::from(([0, 0, 0, 0], get_port()));
     println!("Listening on http://{}", addr);
-    axum::Server::bind(&addr)
+    Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();

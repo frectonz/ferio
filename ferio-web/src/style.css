@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply w-screen h-screen;
+  @apply bg-gradient-to-b from-purple-500 to-indigo-700;
+  @apply text-white;
+}
+
+.glass {
+  @apply bg-white bg-opacity-20 backdrop-blur-lg rounded drop-shadow-lg;
+}
