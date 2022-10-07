@@ -3,11 +3,18 @@
 @tailwind utilities;
 
 body {
-  @apply w-screen h-screen;
-  @apply bg-gradient-to-b from-purple-500 to-indigo-700;
+  @apply min-w-full min-h-screen;
+  @apply bg-gray-900;
   @apply text-white;
 }
 
-.glass {
-  @apply bg-white bg-opacity-20 backdrop-blur-lg rounded drop-shadow-lg;
+.holiday {
+  @apply p-2;
+  @apply text-lg font-mono;
+  @apply bg-gradient-to-b from-purple-500 to-indigo-700;
+  
+}
+
+.holiday-shadow {
+  box-shadow: 2px 2px #4ade80, 3px 3px #22c55e, 4px 4px #16a34a, 5px 5px #15803d;
 }

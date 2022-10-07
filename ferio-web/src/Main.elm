@@ -1,8 +1,8 @@
 module Main exposing (main)
 
 import Browser exposing (Document)
-import Html exposing (Html, div, h1, section, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, a, div, h1, section, span, text)
+import Html.Attributes exposing (class, href)
 import Http
 import Json.Decode exposing (Decoder, field, list, map2, map3, string)
 
@@ -79,15 +79,14 @@ view model =
 viewHolidays : Holidays -> Html msg
 viewHolidays holidays =
     section []
-        [ h1 [ class "text-center text-3xl font-bold p-5 glass" ]
-            [ "There are "
-                ++ (List.length holidays.data |> String.fromInt)
-                ++ " holidays on "
-                ++ String.replace "_" " " holidays.date
-                ++ "."
-                |> text
+        [ h1 [ class "text-left text-3xl font-bold font-mono p-5 holiday" ]
+            [ span [] [ text "There are " ]
+            , span [] [ text (List.length holidays.data |> String.fromInt) ]
+            , span [] [ text " holidays on " ]
+            , span [] [ text (String.replace "_" " " holidays.date) ]
+            , span [] [ text "!" ]
             ]
-        , div [ class "container mx-auto mt-4 grid grid-cols-1 gap-5" ] (List.map (\holiday -> div [ class "glass p-2" ] [ text holiday.name ]) holidays.data)
+        , div [ class "container mx-auto my-4 grid grid-cols-1 gap-5" ] (List.map (\holiday -> div [ class "holiday holiday-shadow" ] [ a [ href holiday.wikipedia_url ] [ text holiday.name ] ]) holidays.data)
         ]
 
 
