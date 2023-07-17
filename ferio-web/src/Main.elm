@@ -1,10 +1,11 @@
 module Main exposing (main)
 
 import Browser exposing (Document)
-import Html exposing (Html, a, div, h1, section, span, text)
-import Html.Attributes exposing (class, href)
+import Html exposing (Html, a, div, h1, li, option, select, text, ul)
+import Html.Attributes exposing (href, selected, style, value)
+import Html.Events exposing (onInput)
 import Http
-import Json.Decode exposing (Decoder, field, list, map2, map3, string)
+import Json.Decode as Decode exposing (Decoder, field, list, map2, map3, string)
 
 
 main : Program () Model Msg
@@ -25,17 +26,23 @@ type Model
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Loading, getHolidays )
+    ( Loading, getHolidays Nothing )
 
 
 type Msg
     = GotHolidays (Result Http.Error Holidays)
+    | GotMonth String
+    | GotDay String
 
 
 type alias Holidays =
-    { date : String
+    { date : Date
     , data : List Holiday
     }
+
+
+type alias Date =
+    { month : String, day : Int }
 
 
 type alias Holiday =
@@ -46,9 +53,9 @@ type alias Holiday =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
-    case msg of
-        GotHolidays result ->
+update msg model =
+    case ( msg, model ) of
+        ( GotHolidays result, _ ) ->
             case result of
                 Ok holidays ->
                     ( Success holidays, Cmd.none )
@@ -56,38 +63,108 @@ update msg _ =
                 Err _ ->
                     ( Failure, Cmd.none )
 
+        ( GotMonth month, Success m ) ->
+            ( Loading, getHolidays (Just { month = month, day = m.date.day }) )
+
+        ( GotDay day, Success m ) ->
+            ( Loading
+            , getHolidays
+                (Just
+                    { month = m.date.month
+                    , day = String.toInt day |> Maybe.withDefault 0
+                    }
+                )
+            )
+
+        _ ->
+            ( model, Cmd.none )
+
 
 view : Model -> Document Msg
 view model =
-    { title = "Ferio Web"
-    , body =
-        [ div []
-            [ case model of
+    let
+        holidays =
+            case model of
                 Failure ->
-                    text "Failure"
+                    viewError
 
                 Loading ->
-                    text "Loading"
+                    viewLoading
 
                 Success data ->
                     viewHolidays data
-            ]
-        ]
+
+        pageTitle =
+            case model of
+                Failure ->
+                    "Oops!"
+
+                Loading ->
+                    "Loading Holidays"
+
+                Success data ->
+                    "Holidays of " ++ data.date.month ++ " " ++ String.fromInt data.date.day
+    in
+    { title = pageTitle
+    , body = [ holidays ]
     }
 
 
-viewHolidays : Holidays -> Html msg
+viewHolidays : Holidays -> Html Msg
 viewHolidays holidays =
-    section []
-        [ h1 [ class "text-left text-3xl font-bold font-mono p-5 holiday" ]
-            [ span [] [ text "There are " ]
-            , span [] [ text (List.length holidays.data |> String.fromInt) ]
-            , span [] [ text " holidays on " ]
-            , span [] [ text (String.replace "_" " " holidays.date) ]
-            , span [] [ text "!" ]
+    div []
+        [ h1 []
+            [ text
+                ("There are "
+                    ++ (List.length holidays.data |> String.fromInt)
+                    ++ " holidays on "
+                )
+            , monthInput holidays.date.month
+            , dayInput holidays.date.day
             ]
-        , div [ class "container mx-auto my-4 grid grid-cols-1 gap-5" ] (List.map (\holiday -> div [ class "holiday holiday-shadow" ] [ a [ href holiday.wikipedia_url ] [ text holiday.name ] ]) holidays.data)
+        , ul [] (holidays.data |> List.map viewHoliday)
         ]
+
+
+viewHoliday : Holiday -> Html msg
+viewHoliday holiday =
+    li []
+        [ a [ href holiday.wikipedia_url ] [ text holiday.name ]
+        ]
+
+
+viewError : Html msg
+viewError =
+    h1 [] [ text "Sorry, something went wrong!" ]
+
+
+viewLoading : Html msg
+viewLoading =
+    h1 [] [ text "Loading Holidays..." ]
+
+
+monthInput : String -> Html Msg
+monthInput month =
+    select [ style "font-size" "0.7em", onInput GotMonth ]
+        ([ "January", "Feburary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
+            |> List.map
+                (\x ->
+                    option [ value x, selected (x == month) ] [ text x ]
+                )
+        )
+
+
+dayInput : Int -> Html Msg
+dayInput day =
+    select [ style "font-size" "0.7em", onInput GotDay ]
+        (List.repeat 31 0
+            |> List.indexedMap (\i _ -> String.fromInt i)
+            |> List.map
+                (\i ->
+                    option [ value i, selected (i == String.fromInt day) ]
+                        [ text i ]
+                )
+        )
 
 
 subscriptions : Model -> Sub Msg
@@ -95,10 +172,18 @@ subscriptions _ =
     Sub.none
 
 
-getHolidays : Cmd Msg
-getHolidays =
+getHolidays : Maybe Date -> Cmd Msg
+getHolidays d =
     Http.get
-        { url = "http://0.0.0.0:3000/"
+        { url =
+            "http://localhost:3000"
+                ++ (case d of
+                        Just { month, day } ->
+                            "/?date=" ++ month ++ "_" ++ String.fromInt day
+
+                        Nothing ->
+                            "/"
+                   )
         , expect = Http.expectJson GotHolidays holidaysDecoder
         }
 
@@ -106,7 +191,7 @@ getHolidays =
 holidaysDecoder : Decoder Holidays
 holidaysDecoder =
     map2 Holidays
-        (field "date" string)
+        (field "date" dateDecoder)
         (field "data"
             (list
                 (map3 Holiday
@@ -116,3 +201,26 @@ holidaysDecoder =
                 )
             )
         )
+
+
+dateDecoder : Decoder Date
+dateDecoder =
+    string
+        |> Decode.andThen
+            (\str ->
+                case String.split "_" str of
+                    [ month, day ] ->
+                        Decode.succeed ( month, day )
+
+                    _ ->
+                        Decode.fail "Invalid date"
+            )
+        |> Decode.andThen
+            (\( month, day ) ->
+                case String.toInt day of
+                    Just dayInt ->
+                        Decode.succeed (Date month dayInt)
+
+                    Nothing ->
+                        Decode.fail "date is not an integer"
+            )
