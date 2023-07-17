@@ -176,7 +176,7 @@ getHolidays : Maybe Date -> Cmd Msg
 getHolidays d =
     Http.get
         { url =
-            "http://localhost:3000"
+            "http://ferio-api.frectonz.io"
                 ++ (case d of
                         Just { month, day } ->
                             "/?date=" ++ month ++ "_" ++ String.fromInt day
