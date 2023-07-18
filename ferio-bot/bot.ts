@@ -28,23 +28,19 @@ bot.api.setMyCommands([
   },
 ]);
 
-bot.command(
-  "help",
-  (ctx) =>
-    ctx.reply(
-      "/start - show introduction message\n" +
+bot.command("help", (ctx) =>
+  ctx.reply(
+    "/start - show introduction message\n" +
       "/today - get today's holidays\n" +
       "/date - get holidays for a given date\n" +
-      "/help - show this message",
-    ),
+      "/help - show this message"
+  )
 );
 
-bot.command(
-  "start",
-  (ctx) =>
-    ctx.reply(
-      "This is a bot that helps you get the holidays for a given date (/date) or today (/today). It sends you the names of the holidays with their wikipedia links.",
-    ),
+bot.command("start", (ctx) =>
+  ctx.reply(
+    "This is a bot that helps you get the holidays for a given date (/date) or today (/today). It sends you the names of the holidays with their wikipedia links."
+  )
 );
 
 interface Data {
@@ -62,9 +58,9 @@ bot.command(
   "today",
   handleError(async (ctx) => {
     const data = await fetch(SERVER_URL);
-    const json = await data.json() as Data;
+    const json = (await data.json()) as Data;
     await sendHolidays(ctx, json);
-  }),
+  })
 );
 
 bot.command(
@@ -74,23 +70,25 @@ bot.command(
     if (typeof date === "string") {
       date = date.trim().replace(/\s+/g, "_");
       const data = await fetch(`${SERVER_URL}/?date=${date}`);
-      const json = await data.json() as Data;
+      const json = (await data.json()) as Data;
       await sendHolidays(ctx, json);
     } else {
       await ctx.reply(
         "Please provide a date like this <pre>/date March 4</pre>",
         {
           parse_mode: "HTML",
-        },
+        }
       );
     }
-  }),
+  })
 );
 
 async function sendHolidays(ctx: Context, json: Data) {
   for (const holiday of json.data) {
-    await ctx.reply(`<a href="${holiday.wikipedia_url}">${holiday.greeting}</a>`
-      , { parse_mode: "HTML" });
+    await ctx.reply(
+      `<a href="${holiday.wikipedia_url}">${holiday.greeting}</a>`,
+      { parse_mode: "HTML" }
+    );
   }
 }
 
@@ -99,9 +97,9 @@ function handleError(fn: (ctx: Context) => Promise<void>) {
     try {
       await fn(ctx);
     } catch (error) {
-      console.error(error)
+      console.error(error);
       await ctx.reply(
-        "I wasn't able to get today's holidays. If it was an error on my side it will be fixed. Try again after some time.",
+        "I wasn't able to get today's holidays. If it was an error on my side it will be fixed. Try again after some time."
       );
     }
   };

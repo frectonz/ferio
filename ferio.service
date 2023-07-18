@@ -1,0 +1,24 @@
+[Unit]
+Description = ferio
+
+[Service]
+Type           = simple
+User           = root
+Group          = root
+LimitNOFILE    = 4096
+Restart        = always
+RestartSec     = 5s
+StandardOutput = append:/ferio/logs.log
+StandardError  = append:/ferio/errors.log
+
+Environment    = ENV=prod
+Environment    = PORT=80
+Environment    = HTTPS_PORT=443
+Environment    = CERT_PATH=/etc/letsencrypt/live/ferio-api.frectonz.io/fullchain.pem
+Environment    = KEY_PATH=/etc/letsencrypt/live/ferio-api.frectonz.io/privkey.pem
+
+ExecStart      = /ferio/ferio
+
+[Install]
+WantedBy = multi-user.target
+
