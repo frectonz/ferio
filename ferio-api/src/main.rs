@@ -135,6 +135,10 @@ async fn redirect_http_to_https(http_port: u16, https_port: u16) {
     };
 
     let addr = SocketAddr::from(([127, 0, 0, 1], http_port));
+    println!(
+        "HTTP to HTTPS redirecting server listening on http://{}",
+        &addr
+    );
 
     axum_server::bind(addr)
         .serve(redirect.into_make_service())
