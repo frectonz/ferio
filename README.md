@@ -2,6 +2,9 @@
 
 Everyday is a holiday
 
+[Telegram Bot](https://t.me/every_day_is_a_holiday_bot)
+[Website](https://ferio.frectonz.io/)
+
 ## Running The API
 
 ```bash
